@@ -57,7 +57,7 @@ class Ant {
                     Platform.runLater(() -> {
 //                            bots[finalAntY][finalAntX].setFlag(!bots[finalAntY][finalAntX].getFlag());
                         field.getChildren().remove(finalAntY + finalAntX * HREC);
-                        field.getChildren().add(finalAntY + finalAntX * HREC, bots[finalAntX][finalAntY].getRectangle());
+                        field.getChildren().add(finalAntY + finalAntX * HREC, bots[finalAntX][finalAntY]);
                     });
                     Thread.sleep(10);
                 }
