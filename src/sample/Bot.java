@@ -3,45 +3,25 @@ package sample;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 
-class Bot {
+class Bot extends Rectangle {
 
-    static final byte ALIVE = 1;
-    static final byte NOTALIVE = 0;
-    static final int RECTANGLE_WIDTH = 10;
-    static final int RECTANGLE_HEIGHT = 10;
+    private boolean flag;
 
-    private Rectangle rectangle;
-    private byte flag;
-
-
-    Bot(Rectangle rectangle, byte flag) {
-        this.rectangle = rectangle;
+    Bot(boolean flag) {
         setFlag(flag);
     }
 
-    Bot(Rectangle rectangle) {
-        this.rectangle = rectangle;
-    }
-
-    byte getFlag() {
+    boolean getFlag() {
         return flag;
     }
 
-    void setFlag(byte flag) {
+    void setFlag(boolean flag) {
         this.flag = flag;
 
-        if (flag == 1)
-            getRectangle().setFill(Color.BLUE);
+        if (flag)
+            setFill(Color.KHAKI);
         else
-            getRectangle().setFill(Color.WHITESMOKE);
-    }
-
-    Rectangle getRectangle() {
-        return rectangle;
-    }
-
-    void setRectangle(Rectangle rectangle) {
-        this.rectangle = rectangle;
+            setFill(Color.WHITESMOKE);
     }
 
 }

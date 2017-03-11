@@ -6,21 +6,25 @@ import javafx.fxml.FXML;
 import javafx.scene.Group;
 import javafx.scene.control.Button;
 import javafx.scene.paint.Color;
-import javafx.scene.shape.Rectangle;
+import javafx.scene.paint.PhongMaterial;
+import javafx.scene.shape.Box;
 
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-import static sample.Bot.*;
-
 public class Controller {
 
-    private static final int WIDTH = 600;
-    private static final int HEIGHT = 400;
+    private static final boolean ALIVE = true;
+    private static final boolean NOTALIVE = false;
+    private static final int RECTANGLE_WIDTH = 5;
+    private static final int RECTANGLE_HEIGHT = 5;
+
+    public static final int WIDTH = 800;
+    public static final int HEIGHT = 480;
     private static final int THREE = 3;
     private static final int TWO = 2;
-    private static final int WREC = WIDTH / RECTANGLE_WIDTH;
-    private static final int HREC = HEIGHT / RECTANGLE_HEIGHT;
+    public static final int WREC = WIDTH / RECTANGLE_WIDTH;
+    public static final int HREC = HEIGHT / RECTANGLE_HEIGHT;
 
     private ScheduledExecutorService timer;
     private Bot[][] bots;
@@ -32,65 +36,42 @@ public class Controller {
     private boolean gameActive = false;
 
     void init() {
-
         bots = new Bot[WREC][HREC];
         drawField();
-//        createImageData();
-//        drawImageData();
     }
 
     private void drawField() {
+
+        final PhongMaterial redMaterial = new PhongMaterial();
+        redMaterial.setSpecularColor(Color.ORANGE);
+        redMaterial.setDiffuseColor(Color.RED);
+
+        final Box red = new Box(400, 400, 400);
+        red.setMaterial(redMaterial);
+
         for (int i = 0; i < WIDTH; i += RECTANGLE_WIDTH) {
             for (int j = 0; j < HEIGHT; j += RECTANGLE_HEIGHT) {
 
-                Rectangle rectangle = new Rectangle(i, j, RECTANGLE_WIDTH, RECTANGLE_HEIGHT);
-                rectangle.setStroke(Color.LIGHTGRAY);
-
-                if (Math.random() > 0.5) {
-                    rectangle.setFill(Color.WHITESMOKE);
-                    Bot bot = new Bot(rectangle, ALIVE);
+                Bot bot;
+                if (Math.random() > 0.9) {
+                    bot = new Bot(ALIVE);
+                    bot.setFill(Color.WHITESMOKE);
+                    bot.setStroke(Color.WHITE);
                     bots[i / RECTANGLE_WIDTH][j / RECTANGLE_HEIGHT] = bot;
                 } else {
-                    rectangle.setFill(Color.BLUE);
-                    Bot bot = new Bot(rectangle, NOTALIVE);
+                    bot = new Bot(NOTALIVE);
+                    bot.setFill(Color.LIGHTBLUE);
                     bots[i / RECTANGLE_WIDTH][j / RECTANGLE_HEIGHT] = bot;
                 }
 
-                bots[i / RECTANGLE_WIDTH][j / RECTANGLE_HEIGHT].setRectangle(rectangle);
-
-                field.getChildren().add((j + i * HEIGHT / RECTANGLE_WIDTH) / RECTANGLE_HEIGHT, rectangle);
+                field.getChildren().add((j + i * HEIGHT / RECTANGLE_WIDTH) / RECTANGLE_HEIGHT, bot);
             }
         }
     }
-
-
-    private void life() {
-        while (gameActive) {
-            for (int i = 1; i < WREC - 1; i++) {
-                for (int j = 1; j < HREC - 1; j++) {
-                    byte neighborSum = (byte) (bots[i + 1][j + 1].getFlag() + bots[i][j + 1].getFlag() +
-                            bots[i + 1][j].getFlag() + bots[i - 1][j + 1].getFlag() + bots[i + 1][j - 1].getFlag() +
-                            bots[i - 1][j - 1].getFlag() + bots[i - 1][j].getFlag() + bots[i][j - 1].getFlag());
-                    if (neighborSum == THREE)
-                        bots[i][j].setFlag(ALIVE);
-                    if (neighborSum > THREE)
-                        bots[i][j].setFlag(NOTALIVE);
-                    if (neighborSum < TWO)
-                        bots[i][j].setFlag(NOTALIVE);
-                    field.getChildren().remove(j + i * HREC);
-                    field.getChildren().add(j + i * HREC, bots[i][j].getRectangle());
-
-                }
-            }
-        }
-    }
-
-//    private void redraw() {
-//        field.getChildren().addAll(bots);
-//    }
 
     @FXML
     public void startFinish() {
+
         if (!gameActive) {
 
             this.gameActive = true;
@@ -98,28 +79,48 @@ public class Controller {
             Task task = new Task<Void>() {
                 @Override
                 public Void call() throws Exception {
+                    int antX = WREC / 2, antY = HREC / 2;    // start in the middle-ish
+                    int xChange = 0, yChange = -1; // start moving up
                     while (gameActive) {
-                        for (int i = 1; i < WREC - 1; i++) {
-                            for (int j = 1; j < HREC - 1; j++) {
-                                byte neighborSum = (byte) (bots[i + 1][j + 1].getFlag() + bots[i][j + 1].getFlag() +
-                                        bots[i + 1][j].getFlag() + bots[i - 1][j + 1].getFlag() + bots[i + 1][j - 1].getFlag() +
-                                        bots[i - 1][j - 1].getFlag() + bots[i - 1][j].getFlag() + bots[i][j - 1].getFlag());
-                                if (neighborSum == 3)
-                                    bots[i][j].setFlag(ALIVE);
-                                if (neighborSum > 3)
-                                    bots[i][j].setFlag(NOTALIVE);
-                                if (neighborSum < 2)
-                                    bots[i][j].setFlag(NOTALIVE);
-                                int finalJ = j;
-                                int finalI = i;
-                                Platform.runLater(() -> {
-                                    field.getChildren().remove(finalJ + finalI * HREC);
-                                    field.getChildren().add(finalJ + finalI * HREC, bots[finalI][finalJ].getRectangle());
-                                });
-
+                        if (Math.random() > 0.1) {
+                            if (bots[antY][antX].getFlag()) {
+                                // turn left
+                                if (xChange == 0) { // if moving up or down
+                                    xChange = yChange;
+                                    yChange = 0;
+                                } else { // if moving left or right
+                                    yChange = -xChange;
+                                    xChange = 0;
+                                }
+                            } else {
+                                // turn right
+                                if (xChange == 0) { // if moving up or down
+                                    xChange = -yChange;
+                                    yChange = 0;
+                                } else { // if moving left or right
+                                    yChange = xChange;
+                                    xChange = 0;
+                                }
                             }
                         }
-                        Thread.sleep(100);
+
+                        bots[antY][antX].setFlag(!bots[antY][antX].getFlag());
+                        antX += xChange;
+                        antY += yChange;
+
+                        if (antX > WREC - 1) antX = 0;
+                        if (antY > HREC - 1) antY = 0;
+                        if (antX < 0) antX = WREC - 1;
+                        if (antY < 0) antY = HREC - 1;
+
+                        int finalAntY = antY;
+                        int finalAntX = antX;
+                        Platform.runLater(() -> {
+//                            bots[finalAntY][finalAntX].setFlag(!bots[finalAntY][finalAntX].getFlag());
+                            field.getChildren().remove(finalAntY + finalAntX * HREC);
+                            field.getChildren().add(finalAntY + finalAntX * HREC, bots[finalAntX][finalAntY]);
+                        });
+                        Thread.sleep(8);
                     }
                     return null;
                 }
@@ -129,17 +130,46 @@ public class Controller {
             th.setDaemon(true);
             th.start();
             this.actionButton.setText("Stop ");
-
-            } else{
-                // the camera is not active at this point
-                this.gameActive = false;
-                // update again the button content
-                this.actionButton.setText("Start");
-
-                // stop the timer
-                this.stopAcquisition();
-            }
+        } else {
+            // the camera is not active at this point
+            this.gameActive = false;
+            // update again the button content
+            this.actionButton.setText("Start");
+            // stop the timer
+            this.stopAcquisition();
         }
+    }
+
+    private static boolean[][] runAnt(int height, int width) {
+        boolean[][] plane = new boolean[height][width];
+        int antX = width / 2, antY = height / 2;    // start in the middle-ish
+        int xChange = 0, yChange = -1; // start moving up
+        while (antX < width && antY < height && antX >= 0 && antY >= 0) {
+            if (plane[antY][antX]) {
+                // turn left
+                if (xChange == 0) { // if moving up or down
+                    xChange = yChange;
+                    yChange = 0;
+                } else { // if moving left or right
+                    yChange = -xChange;
+                    xChange = 0;
+                }
+            } else {
+                // turn right
+                if (xChange == 0) { // if moving up or down
+                    xChange = -yChange;
+                    yChange = 0;
+                } else { // if moving left or right
+                    yChange = xChange;
+                    xChange = 0;
+                }
+            }
+            plane[antY][antX] = !plane[antY][antX];
+            antX += xChange;
+            antY += yChange;
+        }
+        return plane;
+    }
 
     private void stopAcquisition() {
         if (this.timer != null && !this.timer.isShutdown()) {
